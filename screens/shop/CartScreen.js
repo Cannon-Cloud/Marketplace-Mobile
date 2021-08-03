@@ -1,47 +1,54 @@
 import React from "react";
-import { View, Text, FlatList, StyleSheet, Button } from "react-native";
-import Colors from "../../constants/Colors";
-import { useSelector } from "react-redux";
-import CartItem from "../../components/shop/CartItem";
+import { View, Text, FlatList, Button, StyleSheet } from "react-native";
+import { useSelector, useDispatch } from "react-redux";
 
-const CartScreen = () => {
+import Colors from "../../constants/Colors";
+import CartItem from "../../components/shop/CartItem";
+import * as cartActions from "../../store/actions/cart";
+
+const CartScreen = (props) => {
   const cartTotalAmount = useSelector((state) => state.cart.totalAmount);
-  const cartItem = useSelector((state) => {
+  const cartItems = useSelector((state) => {
     const transformedCartItems = [];
     for (const key in state.cart.items) {
       transformedCartItems.push({
-        produtId: key,
+        productId: key,
         productTitle: state.cart.items[key].productTitle,
         productPrice: state.cart.items[key].productPrice,
         quantity: state.cart.items[key].quantity,
         sum: state.cart.items[key].sum,
       });
     }
-    return transformedCartItems;
+    return transformedCartItems.sort((a, b) =>
+      a.productId > b.productId ? 1 : -1
+    );
   });
+  const dispatch = useDispatch();
 
   return (
     <View style={styles.screen}>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>
           Total:{" "}
-          <Text style={styles.amount}>$ {cartTotalAmount.toFixed(2)} </Text>
+          <Text style={styles.amount}>${cartTotalAmount.toFixed(2)}</Text>
         </Text>
         <Button
           color={Colors.accent}
           title="Order Now"
-          disabled={cartItem.length === 0}
+          disabled={cartItems.length === 0}
         />
       </View>
       <FlatList
-        data={cartItem}
+        data={cartItems}
         keyExtractor={(item) => item.productId}
         renderItem={(itemData) => (
           <CartItem
             quantity={itemData.item.quantity}
             title={itemData.item.productTitle}
             amount={itemData.item.sum}
-            onRemove={() => {}}
+            onRemove={() => {
+              dispatch(cartActions.removeFromCart(itemData.item.productId));
+            }}
           />
         )}
       />
